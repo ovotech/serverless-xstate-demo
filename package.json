@@ -1,0 +1,27 @@
+{
+  "name": "serverless-xstate-demo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "dependencies": {
+    "source-map-support": "^0.5.21",
+    "xstate": "^4.34.0"
+  },
+  "devDependencies": {
+    "@aws-solutions-constructs/aws-apigateway-sqs": "^2.27.0",
+    "@types/node": "^18.11.9",
+    "aws-cdk": "^2.51.1",
+    "aws-cdk-lib": "^2.51.1",
+    "aws-sdk": "^2.1261.0",
+    "constructs": "^10.1.170",
+    "esbuild": "^0.15.15",
+    "prettier": "^2.8.0",
+    "tsx": "^3.12.1",
+    "typescript": "^4.9.3"
+  }
+}
