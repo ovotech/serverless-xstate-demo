@@ -1,14 +1,26 @@
 import { createMachine, actions } from "xstate";
 import { createInterpreter } from "./interpreter";
 import { createDynamoDbStateStorage } from "./stateStorage";
+import type { SQSEvent, SQSRecord } from "aws-lambda";
+import { DynamoDB } from "aws-sdk";
 
-// TODO: type this
-type Event = any;
+export async function handler(event: SQSEvent) {
+  console.log("Received event", event);
+  const record = event.Records[0];
+  if (!record || event.Records.length > 1) {
+    throw new Error("Expected exactly one record");
+  }
 
-export async function handler(event: Event) {
-  const machineId = getMachineIdFromEvent(event);
-  const payload = getXStateEventPayloadFromEvent(event);
-  const stateStorage = createDynamoDbStateStorage();
+  const machineId = getMachineIdFromRecord(record);
+  const payload = getXStateEventPayloadFromRecord(record);
+
+  console.log("machine id", machineId);
+  console.log("payload", payload);
+
+  const stateStorage = createDynamoDbStateStorage(
+    process.env.DYNAMO_TABLE!,
+    new DynamoDB.DocumentClient()
+  );
 
   const intepreter = createInterpreter(machineId, countMachine, stateStorage);
 
@@ -22,13 +34,29 @@ export async function handler(event: Event) {
   };
 }
 
-function getMachineIdFromEvent(event: Event): string {}
-function getXStateEventPayloadFromEvent(event: Event): any {}
+function getMachineIdFromRecord(record: SQSRecord): string {
+  const id = record.attributes.MessageGroupId;
+
+  if (!id) {
+    throw new Error("Expected record to have a MessageGroupId");
+  }
+
+  return id;
+}
+
+function getXStateEventPayloadFromRecord(record: SQSRecord): any {
+  const body = record.body;
+
+  if (!body) {
+    throw new Error("Expected record to have a body");
+  }
+
+  return JSON.parse(body);
+}
 
 const wait = (ms: number) => new Promise((res) => setTimeout(res, ms));
 
 const countMachine = createMachine({
-  id: "count",
   initial: "idle",
   context: {
     count: 0,
@@ -43,7 +71,9 @@ const countMachine = createMachine({
       on: {
         COUNT: "counting_even",
       },
-      tags: ["resolve"],
+      meta: {
+        settled: true,
+      },
     },
     counting_even: {
       invoke: {

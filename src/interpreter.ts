@@ -110,7 +110,7 @@ export function createInterpreter<
       return initialState;
     }
 
-    const service = interpret(machine.withContext(initialState.context));
+    const service = interpret(machine.withContext(initialState.context) as any);
 
     // When a state is hydrated it is guaranteed to be settled.
     // This is used so that we don't immediately exit when restoring the state.

@@ -3,7 +3,7 @@ import { Construct } from "constructs";
 import * as nodejs from "aws-cdk-lib/aws-lambda-nodejs";
 import * as sqs from "aws-cdk-lib/aws-sqs";
 import * as eventSources from "aws-cdk-lib/aws-lambda-event-sources";
-import * as apigateway from "aws-cdk-lib/aws-apigateway";
+import * as dynamo from "aws-cdk-lib/aws-dynamodb";
 import * as iam from "aws-cdk-lib/aws-iam";
 import { CfnOutput } from "aws-cdk-lib";
 import * as lambda from "aws-cdk-lib/aws-lambda";
@@ -14,6 +14,12 @@ export class InfraStack extends cdk.Stack {
 
     const queue = new sqs.Queue(this, "XStateEventQueue", {
       fifo: true,
+      deadLetterQueue: {
+        queue: new sqs.Queue(this, "XStateEventQueueDeadLetterQueue", {
+          fifo: true,
+        }),
+        maxReceiveCount: 3,
+      },
     });
 
     const sendMessageFn = new nodejs.NodejsFunction(this, "SendMessage", {
@@ -39,11 +45,23 @@ export class InfraStack extends cdk.Stack {
       value: sendMessageFnUrl.url,
     });
 
+    const stateStorage = new dynamo.Table(this, "XStateStorage", {
+      partitionKey: {
+        name: "machineId",
+        type: dynamo.AttributeType.STRING,
+      },
+    });
+
     const machineFn = new nodejs.NodejsFunction(this, "XStateApp", {
       entry: "src/machine-lambda.ts",
       handler: "handler",
       bundling: {},
+      environment: {
+        DYNAMO_TABLE: stateStorage.tableName,
+      },
     });
+
+    stateStorage.grantReadWriteData(machineFn);
 
     machineFn.addEventSource(
       new eventSources.SqsEventSource(queue, {

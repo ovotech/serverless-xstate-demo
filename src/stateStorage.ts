@@ -1,3 +1,4 @@
+import { DynamoDB } from "aws-sdk";
 import {
   EventObject,
   MarkAllImplementationsAsProvided,
@@ -39,10 +40,49 @@ export interface StateStorage<
   cleanUp: (key: string) => Promise<void>;
 }
 
-export function createDynamoDbStateStorage(): StateStorage<
-  any,
-  any,
-  any,
-  any,
-  any
-> {}
+export function createDynamoDbStateStorage(
+  tableName: string,
+  ddbClient: DynamoDB.DocumentClient
+): StateStorage<any, any, any, any, any> {
+  return {
+    async get(key) {
+      const result = await ddbClient
+        .get({
+          TableName: tableName,
+          Key: {
+            machineId: key,
+          },
+        })
+        .promise();
+
+      if (!result.Item) {
+        return null;
+      }
+
+      return JSON.parse(result.Item.state);
+    },
+
+    async set(key, value) {
+      await ddbClient
+        .put({
+          TableName: tableName,
+          Item: {
+            machineId: key,
+            state: JSON.stringify(value),
+          },
+        })
+        .promise();
+    },
+
+    async cleanUp(key) {
+      await ddbClient
+        .delete({
+          TableName: tableName,
+          Key: {
+            machineId: key,
+          },
+        })
+        .promise();
+    },
+  };
+}

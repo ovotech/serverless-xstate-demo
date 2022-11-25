@@ -1,7 +1,11 @@
+import type { APIGatewayEvent } from "aws-lambda";
 import { SQS } from "aws-sdk";
 
-export async function handler() {
-  await sendMessage("1", "COUNT");
+export async function handler(event: APIGatewayEvent) {
+  const payload = JSON.parse(event.body!);
+  console.log("Received payload", payload);
+
+  await sendMessage(payload.machineId, payload.event);
 
   return {
     statusCode: 202,
@@ -17,7 +21,7 @@ const sendMessage = (groupdId: string, body: any) =>
         QueueUrl: process.env.QUEUE_URL!,
         MessageGroupId: groupdId,
         MessageDeduplicationId: Math.random().toString(),
-        MessageBody: JSON.stringify({ body }),
+        MessageBody: JSON.stringify(body),
       },
       (err, data) => {
         if (err) {
