@@ -39,9 +39,16 @@ export const listen: APIGatewayProxyWebsocketHandlerV2 = async (event) => {
 };
 
 export const disconnect: APIGatewayProxyWebsocketHandlerV2 = async (event) => {
+  console.log("event", event);
+  const tableName = process.env.DYNAMO_TABLE;
+
+  if (!tableName) {
+    throw new Error("Missing DYNAMO_TABLE environment variable");
+  }
+
   await ddb
     .delete({
-      TableName: process.env.DYNAMO_TABLE ?? "",
+      TableName: tableName,
       Key: {
         connectionId: event.requestContext.connectionId,
       },
