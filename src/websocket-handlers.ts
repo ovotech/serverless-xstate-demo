@@ -3,7 +3,11 @@ import { DynamoDB } from "aws-sdk";
 
 const ddb = new DynamoDB.DocumentClient();
 
-export const connect = () => ({ statusCode: 200, body: "Connected." });
+export const connect: APIGatewayProxyWebsocketHandlerV2 = (
+  _event,
+  _context,
+  callback
+) => callback(null, { statusCode: 200, body: "Connected." });
 
 export const listen: APIGatewayProxyWebsocketHandlerV2 = async (event) => {
   console.log("event", event);
@@ -30,6 +34,7 @@ export const listen: APIGatewayProxyWebsocketHandlerV2 = async (event) => {
 
   return {
     statusCode: 200,
+    body: "Listening.",
   };
 };
 
@@ -44,5 +49,6 @@ export const disconnect: APIGatewayProxyWebsocketHandlerV2 = async (event) => {
     .promise();
   return {
     statusCode: 200,
+    body: "Disconnected.",
   };
 };

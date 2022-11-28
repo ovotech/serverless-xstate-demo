@@ -126,7 +126,7 @@ export class InfraStack extends cdk.Stack {
       }
     );
 
-    const webSocketApi = new apigwv2.WebSocketApi(this, "APIWebsocket", {
+    const webSocketApi = new apigwv2.WebSocketApi(this, "XStateWebsocketApi", {
       connectRouteOptions: {
         integration: new WebSocketLambdaIntegration(
           "ConnectIntegration",
