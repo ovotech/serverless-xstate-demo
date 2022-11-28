@@ -13,6 +13,8 @@
     "xstate": "^4.34.0"
   },
   "devDependencies": {
+    "@aws-cdk/aws-apigatewayv2-alpha": "2.51.1-alpha.0",
+    "@aws-cdk/aws-apigatewayv2-integrations-alpha": "2.51.1-alpha.0",
     "@aws-solutions-constructs/aws-apigateway-sqs": "^2.27.0",
     "@types/aws-lambda": "^8.10.109",
     "@types/node": "^18.11.9",

@@ -7,6 +7,8 @@ import * as dynamo from "aws-cdk-lib/aws-dynamodb";
 import * as iam from "aws-cdk-lib/aws-iam";
 import { CfnOutput } from "aws-cdk-lib";
 import * as lambda from "aws-cdk-lib/aws-lambda";
+import * as apigwv2 from "@aws-cdk/aws-apigatewayv2-alpha";
+import { WebSocketLambdaIntegration } from "@aws-cdk/aws-apigatewayv2-integrations-alpha";
 
 export class InfraStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
@@ -50,6 +52,7 @@ export class InfraStack extends cdk.Stack {
         name: "machineId",
         type: dynamo.AttributeType.STRING,
       },
+      stream: dynamo.StreamViewType.NEW_IMAGE,
     });
 
     const machineFn = new nodejs.NodejsFunction(this, "XStateApp", {
@@ -68,5 +71,116 @@ export class InfraStack extends cdk.Stack {
         batchSize: 1,
       })
     );
+
+    const connectionStorage = new dynamo.Table(
+      this,
+      "XStateConnectionStorage",
+      {
+        partitionKey: {
+          name: "connectionId",
+          type: dynamo.AttributeType.STRING,
+        },
+        sortKey: {
+          name: "machineId",
+          type: dynamo.AttributeType.STRING,
+        },
+      }
+    );
+
+    const websocketConnectFn = new nodejs.NodejsFunction(
+      this,
+      "XStateConnectWS",
+      {
+        entry: "src/websocket-handlers.ts",
+        handler: "connect",
+        bundling: {},
+        environment: {
+          DYNAMO_TABLE: connectionStorage.tableName,
+        },
+      }
+    );
+
+    const websocketListenFn = new nodejs.NodejsFunction(
+      this,
+      "XStateListenWS",
+      {
+        entry: "src/websocket-handlers.ts",
+        handler: "listen",
+        bundling: {},
+        environment: {
+          DYNAMO_TABLE: connectionStorage.tableName,
+        },
+      }
+    );
+
+    const websocketDisconnectFn = new nodejs.NodejsFunction(
+      this,
+      "XStateDisconnectWS",
+      {
+        entry: "src/websocket-handlers.ts",
+        handler: "disconnect",
+        bundling: {},
+        environment: {
+          DYNAMO_TABLE: connectionStorage.tableName,
+        },
+      }
+    );
+
+    const webSocketApi = new apigwv2.WebSocketApi(this, "XStateWebsocketApi", {
+      connectRouteOptions: {
+        integration: new WebSocketLambdaIntegration(
+          "ConnectIntegration",
+          websocketConnectFn
+        ),
+      },
+      disconnectRouteOptions: {
+        integration: new WebSocketLambdaIntegration(
+          "DisconnectIntegration",
+          websocketDisconnectFn
+        ),
+      },
+    });
+
+    webSocketApi.addRoute("listen", {
+      integration: new WebSocketLambdaIntegration(
+        "ListenIntegration",
+        websocketListenFn
+      ),
+    });
+
+    new CfnOutput(this, "WebsocketAPIUrl", {
+      value: webSocketApi.apiEndpoint,
+    });
+
+    new apigwv2.WebSocketStage(this, "WebsocketStage", {
+      webSocketApi,
+      stageName: "prod",
+      autoDeploy: true,
+    });
+
+    const handleStateChangeHandler = new nodejs.NodejsFunction(
+      this,
+      "XStateHandleStateChange",
+      {
+        entry: "src/handle-state-change-lambda.ts",
+        handler: "handler",
+        bundling: {},
+        environment: {
+          DYNAMO_TABLE: connectionStorage.tableName,
+        },
+      }
+    );
+
+    handleStateChangeHandler.addEventSource(
+      new eventSources.DynamoEventSource(stateStorage, {
+        startingPosition: lambda.StartingPosition.LATEST,
+      })
+    );
+
+    [
+      handleStateChangeHandler,
+      websocketListenFn,
+      websocketDisconnectFn,
+    ].forEach((fn) => connectionStorage.grantReadWriteData(fn));
   }
 }

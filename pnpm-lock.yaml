@@ -1,6 +1,8 @@
 lockfileVersion: 5.4
 
 specifiers:
+  '@aws-cdk/aws-apigatewayv2-alpha': 2.51.1-alpha.0
+  '@aws-cdk/aws-apigatewayv2-integrations-alpha': 2.51.1-alpha.0
   '@aws-solutions-constructs/aws-apigateway-sqs': ^2.27.0
   '@types/aws-lambda': ^8.10.109
   '@types/node': ^18.11.9
@@ -20,6 +22,8 @@ dependencies:
   xstate: 4.34.0
 
 devDependencies:
+  '@aws-cdk/aws-apigatewayv2-alpha': 2.51.1-alpha.0_hsmwwcuhohrdjztgxtthizblxe
+  '@aws-cdk/aws-apigatewayv2-integrations-alpha': 2.51.1-alpha.0_y2bdzchwa6fbikpntglv54k2fu
   '@aws-solutions-constructs/aws-apigateway-sqs': 2.27.0_hsmwwcuhohrdjztgxtthizblxe
   '@types/aws-lambda': 8.10.109
   '@types/node': 18.11.9
@@ -44,6 +48,30 @@ packages:
 
   /@aws-cdk/asset-node-proxy-agent-v5/2.0.24:
     resolution: {integrity: sha512-DW5p6hbcdUUA9a8yO4s8vymUKYIbo+ajxbQiVf+NhqqCgSCTTgswIb9trTPCmi/Y4L2+SQZtkFMrFwPOC1NASg==}
+    dev: true
+
+  /@aws-cdk/aws-apigatewayv2-alpha/2.51.1-alpha.0_hsmwwcuhohrdjztgxtthizblxe:
+    resolution: {integrity: sha512-cgAUGSBa8qLnEdRCjAQMtkVlqK7ML+gep9bTlaxQcb3gExvlPNpFUZNxOGoEb1Bpjyhtn2peN37+GU1bEJ6fbQ==}
+    engines: {node: '>= 14.15.0'}
+    peerDependencies:
+      aws-cdk-lib: ^2.51.1
+      constructs: ^10.0.0
+    dependencies:
+      aws-cdk-lib: 2.51.1_constructs@10.1.170
+      constructs: 10.1.170
+    dev: true
+
+  /@aws-cdk/aws-apigatewayv2-integrations-alpha/2.51.1-alpha.0_y2bdzchwa6fbikpntglv54k2fu:
+    resolution: {integrity: sha512-x2pmhU/1+bWAm17ORxQ8DyPcwi7Kqhj4RQJ/Zy51fxGUZRJSSdcjLpwa2g8P3nQyKwfrEYU0VsLOV5RNlFKywQ==}
+    engines: {node: '>= 14.15.0'}
+    peerDependencies:
+      '@aws-cdk/aws-apigatewayv2-alpha': 2.51.1-alpha.0
+      aws-cdk-lib: ^2.51.1
+      constructs: ^10.0.0
+    dependencies:
+      '@aws-cdk/aws-apigatewayv2-alpha': 2.51.1-alpha.0_hsmwwcuhohrdjztgxtthizblxe
+      aws-cdk-lib: 2.51.1_constructs@10.1.170
+      constructs: 10.1.170
     dev: true
 
   /@aws-solutions-constructs/aws-apigateway-sqs/2.27.0_hsmwwcuhohrdjztgxtthizblxe:
